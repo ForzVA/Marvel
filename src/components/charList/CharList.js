@@ -1,5 +1,4 @@
 import "./charList.scss";
-import abyss from "../../resources/img/abyss.jpg";
 import { Component } from "react/cjs/react.production.min";
 import MarvelService from "../../services/MarvelService";
 import Spinner from "../spinner/Spinner";

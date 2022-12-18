@@ -47,6 +47,8 @@ class CharInfo extends Component {
       .getCharacter(charId)
       .then(this.onCharLoaded)
       .catch(this.onError);
+    // Специальная ошибка для ErrorBoundary
+    // this.foo.bar = 0;
   };
 
   render() {
