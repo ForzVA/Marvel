@@ -15,6 +15,33 @@ class CharList extends Component {
     charEnded: false,
   };
 
+  myRef = null;
+
+  createRef = (elem) => {
+    this.myRef = elem;
+  };
+
+  onSelectChar = (e, id) => {
+    if (this.myRef) {
+      this.myRef.classList.remove("char__item_selected");
+    }
+
+    const target = e.target.closest(".char__item");
+    this.createRef(target);
+
+    this.myRef.classList.add("char__item_selected");
+    this.myRef.focus();
+
+    this.props.onCharSelected(id);
+  };
+
+  onSelectedCharByKeyPress = (e, id) => {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      this.onSelectChar(e, id);
+    }
+  };
+
   marverlService = new MarvelService();
 
   componentDidMount() {
@@ -85,9 +112,11 @@ class CharList extends Component {
 
       return (
         <li
+          tabIndex={0}
           className="char__item"
           key={item.id}
-          onClick={() => this.props.onCharSelected(item.id)}
+          onClick={(e) => this.onSelectChar(e, item.id)}
+          onKeyPress={(e) => this.onSelectedCharByKeyPress(e, item.id)}
         >
           <img src={item.thumbnail} alt={item.name} style={imgStyle} />
           <div className="char__name">{item.name}</div>
