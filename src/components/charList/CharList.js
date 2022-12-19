@@ -18,7 +18,26 @@ class CharList extends Component {
 
   componentDidMount() {
     this.onRequest();
+    window.addEventListener("scroll", this.onScroll);
   }
+
+  componentWillUnmount() {
+    window.removeEventListener("scroll", this.onScroll);
+  }
+
+  onScroll = () => {
+    if (this.state.newItemLoading) {
+      return;
+    }
+    if (this.state.charEnded) {
+      window.removeEventListener("scroll", this.onScroll);
+    }
+
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+      this.onCharListLoading();
+      this.onRequest(this.state.offset);
+    }
+  };
 
   onRequest = (offset) => {
     this.onCharListLoading();
@@ -91,14 +110,14 @@ class CharList extends Component {
         {errorMessage}
         {spinner}
         {content}
-        <button
+        {/* <button
           className="button button__main button__long"
           disabled={newItemLoading}
           style={{ display: charEnded ? "none" : "block" }}
           onClick={() => this.onRequest(offset)}
         >
           <div className="inner">load more</div>
-        </button>
+        </button> */}
       </div>
     );
   }
