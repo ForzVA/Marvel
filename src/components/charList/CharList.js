@@ -9,32 +9,48 @@ class CharList extends Component {
     chars: [],
     loading: true,
     error: false,
+    newItemLoading: false,
+    offset: 210,
+    charEnded: false,
   };
 
   marverlService = new MarvelService();
 
   componentDidMount() {
-    this.updateAllChars();
+    this.onRequest();
   }
 
-  onCharsLoaded = (chars) => {
-    this.setState({ loading: false, chars });
+  onRequest = (offset) => {
+    this.onCharListLoading();
+    this.marverlService
+      .getAllCharacters(offset)
+      .then(this.onCharsLoaded)
+      .catch(this.onError);
   };
 
-  onCharsLoading = () => {
-    this.setState({ loading: true });
+  onCharListLoading = () => {
+    this.setState({
+      newItemLoading: true,
+    });
+  };
+
+  onCharsLoaded = (newChars) => {
+    let ended = false;
+    if (newChars.length < 9) {
+      ended = true;
+    }
+
+    this.setState(({ offset, chars }) => ({
+      loading: false,
+      chars: [...chars, ...newChars],
+      newItemLoading: false,
+      offset: offset + 9,
+      charEnded: ended,
+    }));
   };
 
   onError = () => {
     this.setState({ loading: false, error: true });
-  };
-
-  updateAllChars = () => {
-    this.onCharsLoading();
-    this.marverlService
-      .getAllCharacters()
-      .then(this.onCharsLoaded)
-      .catch(this.onError);
   };
 
   renderItems(arr) {
@@ -62,7 +78,8 @@ class CharList extends Component {
     return <ul className="char__grid">{items}</ul>;
   }
   render() {
-    const { loading, error, chars } = this.state;
+    const { loading, error, chars, newItemLoading, offset, charEnded } =
+      this.state;
 
     const items = this.renderItems(chars);
 
@@ -74,7 +91,12 @@ class CharList extends Component {
         {errorMessage}
         {spinner}
         {content}
-        <button className="button button__main button__long">
+        <button
+          className="button button__main button__long"
+          disabled={newItemLoading}
+          style={{ display: charEnded ? "none" : "block" }}
+          onClick={() => this.onRequest(offset)}
+        >
           <div className="inner">load more</div>
         </button>
       </div>
