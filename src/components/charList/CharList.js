@@ -1,107 +1,94 @@
 import "./charList.scss";
 import PropTypes from "prop-types";
-import { Component } from "react/cjs/react.production.min";
+import React, { useState, useEffect, useRef } from "react";
 import MarvelService from "../../services/MarvelService";
 import Spinner from "../spinner/Spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 
-class CharList extends Component {
-  state = {
-    chars: [],
-    loading: true,
-    error: false,
-    newItemLoading: false,
-    offset: 210,
-    charEnded: false,
-  };
+const CharList = (props) => {
+  const [chars, setChars] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [newItemLoading, setNewItemLoading] = useState(false);
+  const [offset, setOffset] = useState(210);
+  const [charEnded, setCharEnded] = useState(false);
 
-  myRef = null;
+  const marverlService = new MarvelService();
 
-  createRef = (elem) => {
-    this.myRef = elem;
-  };
+  useEffect(() => {
+    onCharListLoading();
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-  onSelectChar = (e, id) => {
-    if (this.myRef) {
-      this.myRef.classList.remove("char__item_selected");
+  useEffect(() => {
+    if (newItemLoading) {
+      onRequest(offset);
     }
+  }, [newItemLoading]);
 
-    const target = e.target.closest(".char__item");
-    this.createRef(target);
-
-    this.myRef.classList.add("char__item_selected");
-    this.myRef.focus();
-
-    this.props.onCharSelected(id);
+  const onCharListLoading = () => {
+    setNewItemLoading(true);
   };
 
-  onSelectedCharByKeyPress = (e, id) => {
-    if (e.key === " " || e.key === "Enter") {
-      e.preventDefault();
-      this.onSelectChar(e, id);
-    }
+  const onRequest = (offset) => {
+    onCharListLoading();
+    return marverlService
+      .getAllCharacters(offset)
+      .then(onCharsLoaded)
+      .catch(onError)
+      .finally(() => setNewItemLoading(false));
   };
 
-  marverlService = new MarvelService();
-
-  componentDidMount() {
-    this.onRequest();
-    window.addEventListener("scroll", this.onScroll);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("scroll", this.onScroll);
-  }
-
-  onScroll = () => {
-    if (this.state.newItemLoading) {
+  const onScroll = () => {
+    if (newItemLoading) {
       return;
     }
-    if (this.state.charEnded) {
-      window.removeEventListener("scroll", this.onScroll);
+    if (charEnded) {
+      window.removeEventListener("scroll", onScroll);
     }
 
     if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
-      this.onCharListLoading();
-      this.onRequest(this.state.offset);
+      setNewItemLoading(true);
     }
   };
 
-  onRequest = (offset) => {
-    this.onCharListLoading();
-    this.marverlService
-      .getAllCharacters(offset)
-      .then(this.onCharsLoaded)
-      .catch(this.onError);
+  const itemRefs = useRef([]);
+
+  const onSelectChar = (indx) => {
+    itemRefs.current.forEach((item) =>
+      item.classList.remove("char__item_selected")
+    );
+    itemRefs.current[indx].classList.add("char__item_selected");
+    itemRefs.current[indx].focus();
   };
 
-  onCharListLoading = () => {
-    this.setState({
-      newItemLoading: true,
-    });
+  const onSelectedCharByKeyPress = (e, id) => {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      onSelectChar(id);
+    }
   };
 
-  onCharsLoaded = (newChars) => {
+  const onCharsLoaded = (newChars, offset) => {
     let ended = false;
     if (newChars.length < 9) {
       ended = true;
     }
-
-    this.setState(({ offset, chars }) => ({
-      loading: false,
-      chars: [...chars, ...newChars],
-      newItemLoading: false,
-      offset: offset + 9,
-      charEnded: ended,
-    }));
+    setLoading(false);
+    setChars((chars) => [...chars, ...newChars]);
+    setNewItemLoading((newItemLoading) => false);
+    setOffset((offset) => offset + 9);
+    setCharEnded((charEnded) => ended);
   };
 
-  onError = () => {
-    this.setState({ loading: false, error: true });
+  const onError = () => {
+    setLoading((loading) => false);
+    setError(true);
   };
 
-  renderItems(arr) {
-    const items = arr.map((item) => {
+  function renderItems(arr) {
+    const items = arr.map((item, i) => {
       const noPhotochar =
         "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg";
 
@@ -112,11 +99,18 @@ class CharList extends Component {
 
       return (
         <li
+          ref={(el) => (itemRefs.current[i] = el)}
           tabIndex={0}
           className="char__item"
           key={item.id}
-          onClick={(e) => this.onSelectChar(e, item.id)}
-          onKeyPress={(e) => this.onSelectedCharByKeyPress(e, item.id)}
+          onClick={() => {
+            props.onCharSelected(item.id);
+            onSelectChar(i);
+          }}
+          onKeyPress={(e) => {
+            onSelectedCharByKeyPress(e, i);
+            onSelectChar(i);
+          }}
         >
           <img src={item.thumbnail} alt={item.name} style={imgStyle} />
           <div className="char__name">{item.name}</div>
@@ -126,32 +120,28 @@ class CharList extends Component {
 
     return <ul className="char__grid">{items}</ul>;
   }
-  render() {
-    const { loading, error, chars, newItemLoading, offset, charEnded } =
-      this.state;
 
-    const items = this.renderItems(chars);
+  const items = renderItems(chars);
 
-    const errorMessage = error ? <ErrorMessage /> : null;
-    const spinner = loading ? <Spinner /> : null;
-    const content = !(loading || error) ? items : null;
-    return (
-      <div className="char__list">
-        {errorMessage}
-        {spinner}
-        {content}
-        {/* <button
-          className="button button__main button__long"
-          disabled={newItemLoading}
-          style={{ display: charEnded ? "none" : "block" }}
-          onClick={() => this.onRequest(offset)}
-        >
-          <div className="inner">load more</div>
-        </button> */}
-      </div>
-    );
-  }
-}
+  const errorMessage = error ? <ErrorMessage /> : null;
+  const spinner = loading ? <Spinner /> : null;
+  const content = !(loading || error) ? items : null;
+  return (
+    <div className="char__list">
+      {errorMessage}
+      {spinner}
+      {content}
+      {/* <button
+        className="button button__main button__long"
+        disabled={newItemLoading}
+        style={{ display: charEnded ? "none" : "block" }}
+        onClick={() => onRequest(offset)}
+      >
+        <div className="inner">load more</div>
+      </button> */}
+    </div>
+  );
+};
 
 CharList.propTypes = {
   onCharSelected: PropTypes.func.isRequired,
