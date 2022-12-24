@@ -8,28 +8,28 @@ const ComicsList = () => {
   const [comicsList, setComicsList] = useState([]);
   const [newItemLoading, setNewItemLoading] = useState(false);
   const [offset, setOffset] = useState(0);
-  const [charEnded, setCharEnded] = useState(false);
+  const [comicsEnded, setComicsEnded] = useState(false);
 
   const { getAllComics, error, loading } = useMarvelService();
 
   useEffect(() => {
-    onRequest(offset);
+    onRequest(offset, true);
   }, []);
 
-  const onRequest = (offset) => {
-    setNewItemLoading(true);
-    return getAllComics(offset).then(onCharsLoaded);
+  const onRequest = (offset, initial) => {
+    initial ? setNewItemLoading(false) : setNewItemLoading(true);
+    getAllComics(offset).then(onComicsLoaded);
   };
 
-  const onCharsLoaded = (newComics) => {
+  const onComicsLoaded = (newComics) => {
     let ended = false;
     if (newComics.length < 8) {
       ended = true;
     }
-    setComicsList((comics) => [...comics, ...newComics]);
+    setComicsList([...comicsList, ...newComics]);
     setNewItemLoading(false);
-    setOffset((offset) => offset + 8);
-    setCharEnded((charEnded) => ended);
+    setOffset(offset + 8);
+    setComicsEnded(ended);
   };
 
   function renderItems(arr) {
@@ -64,7 +64,7 @@ const ComicsList = () => {
       <button
         className="button button__main button__long"
         disabled={newItemLoading}
-        style={{ display: charEnded ? "none" : "block" }}
+        style={{ display: comicsEnded ? "none" : "block" }}
         onClick={() => {
           onRequest(offset);
         }}
