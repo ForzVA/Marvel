@@ -1,10 +1,11 @@
-import { Component, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import "./charInfo.scss";
 import Spinner from "../spinner/Spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 import Skeleton from "../skeleton/Skeleton";
 import useMarvelService from "../../services/MarvelService";
+import { Link } from "react-router-dom";
 
 const CharInfo = (props) => {
   const [char, setChar] = useState(null);
@@ -24,7 +25,7 @@ const CharInfo = (props) => {
     if (!charId) {
       return;
     }
-    clearError()
+    clearError();
     getCharacter(charId).then(onCharLoaded);
     // Специальная ошибка для ErrorBoundary
     // this.foo.bar = 0;
@@ -80,9 +81,10 @@ const View = ({ char }) => {
       <ul className="char__comics-list">
         {comics.length > 0 ? (
           comics.slice(0, 10).map((item, i) => {
+            const comicId = item.resourceURI.split("/")[6];
             return (
               <li key={i} className="char__comics-item">
-                {item.name}
+                <Link to={`/comics/${comicId}`}>{item.name}</Link>
               </li>
             );
           })
