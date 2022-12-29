@@ -8,6 +8,12 @@
     column-gap: 25px;
     align-items: start;
   }
+
+  &__content-right {
+    position: sticky;
+    top: 10px;
+  }
+
   &__grid {
     display: grid;
     grid-template-columns: repeat(3, 200px);

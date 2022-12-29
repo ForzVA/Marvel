@@ -6,6 +6,7 @@ import ErrorBoundary from "../errorBoundary/ErrorBoundary";
 import decoration from "../../resources/img/vision.png";
 
 import React from "react";
+import CharSearch from "../charSearch/SearchChar";
 
 const MainPage = () => {
   const [selectedChar, setSelectedChar] = useState(null);
@@ -23,9 +24,12 @@ const MainPage = () => {
         <ErrorBoundary>
           <CharList onCharSelected={onCharSelected} />
         </ErrorBoundary>
-        <ErrorBoundary>
-          <CharInfo charId={selectedChar} />
-        </ErrorBoundary>
+        <div className="char__content-right">
+          <ErrorBoundary>
+            <CharInfo charId={selectedChar} />
+          </ErrorBoundary>
+          <CharSearch />
+        </div>
       </div>
       <img className="bg-decoration" src={decoration} alt="vision" />
     </>
