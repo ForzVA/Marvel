@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 import { Link } from "react-router-dom";
 
@@ -14,6 +15,10 @@ const Page404 = () => {
         fontSize: "30px",
       }}
     >
+      <Helmet>
+        <meta name="description" content="Page not found" />
+        <title>Page not found</title>
+      </Helmet>
       <ErrorMessage />
       <p>PAGE DOESNT EXIST</p>
       <Link to="/" style={{ color: "black", fontWeight: "bolder" }}>
