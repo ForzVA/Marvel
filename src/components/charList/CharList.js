@@ -1,7 +1,7 @@
 import "./charList.scss";
 import PropTypes from "prop-types";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import useMarvelService from "../../services/MarvelService";
 import Spinner from "../spinner/Spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
@@ -128,11 +128,11 @@ const CharList = (props) => {
     );
   }
 
-  return (
-    <div className="char__list">
-      {setContent(process, () => renderItems(chars), newItemLoading)}
-    </div>
-  );
+  const elements = useMemo(() => {
+    return setContent(process, () => renderItems(chars), newItemLoading);
+  }, [process]);
+
+  return <div className="char__list">{elements}</div>;
 };
 
 CharList.propTypes = {
